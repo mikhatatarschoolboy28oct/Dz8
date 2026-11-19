@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Dz8")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9d8a742d8e866a54a5e67a391ea92e830c659e92")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+62def1666188ac0fb7f5b8ae93e5f841a2ab53f0")]
 [assembly: System.Reflection.AssemblyProductAttribute("Dz8")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Dz8")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

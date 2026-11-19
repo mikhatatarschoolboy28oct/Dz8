@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.IO;
 enum AccountType
 {
     Current,
@@ -19,7 +20,7 @@ class BankTransaction
         Amount = amount;
     }
 }
-class BankAccount
+class BankAccount : IDisposable
 {
     private static int nextNumber = 1000;
 
@@ -27,6 +28,7 @@ class BankAccount
     private decimal balance;
     private AccountType accountType;
     private Queue transactions = new Queue();
+    private bool disposed = false;
 
     private static int GenerateNumber()
     {
@@ -134,6 +136,30 @@ class BankAccount
             Console.WriteLine($"  {t.Date:dd.MM.yyyy HH:mm:ss}   {t.Amount:+0.00;-0.00}");
         }
     }
+
+    public void Dispose()
+    {
+        if (disposed)
+        {
+            return;
+        }
+
+        string fileName = $"transactions_{accountNumber}.txt";
+
+        using (StreamWriter writer = new StreamWriter(fileName))
+        {
+            foreach (object item in transactions)
+            {
+                BankTransaction t = (BankTransaction)item;
+                writer.WriteLine($"{t.Date:dd.MM.yyyy HH:mm:ss};{t.Amount:+0.00;-0.00}");
+            }
+        }
+
+        Console.WriteLine($"Проводки счета {accountNumber} записаны в файл: {Path.GetFullPath(fileName)}");
+
+        disposed = true;
+        GC.SuppressFinalize(this);
+    }
 }
 
 struct Money
@@ -147,34 +173,20 @@ class Program
     {
         Console.OutputEncoding = System.Text.Encoding.UTF8;
 
-        BankAccount acc1 = new BankAccount(1000m, AccountType.Current);
-        BankAccount acc2 = new BankAccount(500m);
-        BankAccount acc3 = new BankAccount(AccountType.Savings);
-        BankAccount acc4 = new BankAccount();
+        using (BankAccount acc1 = new BankAccount(1000m, AccountType.Current))
+        using (BankAccount acc2 = new BankAccount(500m, AccountType.Savings))
+        {
+            acc1.Deposit(200m);
+            acc1.Withdraw(150m);
+            acc1.Withdraw(5000m);
+            acc2.Transfer(acc1, 300m);
 
-        Console.WriteLine($"Номера счетов: {acc1.GetAccountNumber()}, {acc2.GetAccountNumber()}, {acc3.GetAccountNumber()}, {acc4.GetAccountNumber()}");
-        Console.WriteLine($"Типы счетов: {acc1.GetAccountType()}, {acc2.GetAccountType()}, {acc3.GetAccountType()}, {acc4.GetAccountType()}");
+            acc1.PrintTransactions();
+            Console.WriteLine();
+            acc2.PrintTransactions();
+            Console.WriteLine();
+        }
 
-        bool ok = acc2.Transfer(acc1, 300m);
-        Console.WriteLine($"Перевод 300: {ok}");
-        Console.WriteLine($"acc1: {acc1.GetBalance():F2}, acc2: {acc2.GetBalance():F2}");
-
-        BankAccount nothing = null;
-        Console.WriteLine($"Перевод с null: {acc2.Transfer(nothing, 100m)}");
-
-        Console.WriteLine($"Перевод самому себе: {acc1.Transfer(acc1, 100m)}");
-
-        BankAccount link = acc1;
-        link.Deposit(100m);
-        Console.WriteLine($"После link.Deposit(100): acc1 = {acc1.GetBalance():F2}");
-
-        Money m1 = new Money();
-        m1.Amount = 50m;
-        Money m2 = m1;
-        m2.Amount = 999m;
-        Console.WriteLine($"m1.Amount = {m1.Amount}, m2.Amount = {m2.Amount}");
-        Console.WriteLine();
-        acc1.PrintTransactions();
-        acc2.PrintTransactions();
+        Console.WriteLine("Блок using закончился, Dispose вызван автоматически.");
     }
 }
