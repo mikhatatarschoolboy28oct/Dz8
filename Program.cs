@@ -1,5 +1,5 @@
 ﻿using System;
-
+using System.Collections;
 enum AccountType
 {
     Current,
@@ -8,6 +8,17 @@ enum AccountType
     Deposit
 }
 
+class BankTransaction
+{
+    public readonly DateTime Date;
+    public readonly decimal Amount;
+
+    public BankTransaction(decimal amount)
+    {
+        Date = DateTime.Now;
+        Amount = amount;
+    }
+}
 class BankAccount
 {
     private static int nextNumber = 1000;
@@ -15,6 +26,7 @@ class BankAccount
     private int accountNumber;
     private decimal balance;
     private AccountType accountType;
+    private Queue transactions = new Queue();
 
     private static int GenerateNumber()
     {
@@ -71,6 +83,7 @@ class BankAccount
             return false;
         }
         balance += amount;
+        transactions.Enqueue(new BankTransaction(amount));
         return true;
     }
 
@@ -81,6 +94,7 @@ class BankAccount
             return false;
         }
         balance -= amount;
+        transactions.Enqueue(new BankTransaction(-amount));
         return true;
     }
 
@@ -103,6 +117,22 @@ class BankAccount
 
         Deposit(amount);
         return true;
+    }
+    public void PrintTransactions()
+    {
+        Console.WriteLine($"История операций счета {accountNumber}:");
+
+        if (transactions.Count == 0)
+        {
+            Console.WriteLine("  операций нет");
+            return;
+        }
+
+        foreach (object item in transactions)
+        {
+            BankTransaction t = (BankTransaction)item;
+            Console.WriteLine($"  {t.Date:dd.MM.yyyy HH:mm:ss}   {t.Amount:+0.00;-0.00}");
+        }
     }
 }
 
@@ -143,5 +173,8 @@ class Program
         Money m2 = m1;
         m2.Amount = 999m;
         Console.WriteLine($"m1.Amount = {m1.Amount}, m2.Amount = {m2.Amount}");
+        Console.WriteLine();
+        acc1.PrintTransactions();
+        acc2.PrintTransactions();
     }
 }
