@@ -1,170 +1,76 @@
 ﻿using System;
-using System.Collections;
-using System.IO;
-enum AccountType
+
+class Song
 {
-    Current,
-    Savings,
-    Credit,
-    Deposit
-}
+    private string name;
+    private string author;
+    private Song prev;
 
-class BankTransaction
-{
-    public readonly DateTime Date;
-    public readonly decimal Amount;
-
-    public BankTransaction(decimal amount)
+    public Song()
     {
-        Date = DateTime.Now;
-        Amount = amount;
-    }
-}
-class BankAccount : IDisposable
-{
-    private static int nextNumber = 1000;
-
-    private int accountNumber;
-    private decimal balance;
-    private AccountType accountType;
-    private Queue transactions = new Queue();
-    private bool disposed = false;
-
-    private static int GenerateNumber()
-    {
-        return ++nextNumber;
     }
 
-    public BankAccount()
+    public Song(string name, string author)
     {
-        accountNumber = GenerateNumber();
-        balance = 0;
-        accountType = AccountType.Current;
+        this.name = name;
+        this.author = author;
+        this.prev = null;
     }
 
-    public BankAccount(decimal balance)
+    public Song(string name, string author, Song prev)
     {
-        accountNumber = GenerateNumber();
-        this.balance = balance;
-        accountType = AccountType.Current;
+        this.name = name;
+        this.author = author;
+        this.prev = prev;
     }
 
-    public BankAccount(AccountType accountType)
+    public void SetName(string value)
     {
-        accountNumber = GenerateNumber();
-        balance = 0;
-        this.accountType = accountType;
+        name = value;
     }
 
-    public BankAccount(decimal balance, AccountType accountType)
+    public void SetAuthor(string value)
     {
-        accountNumber = GenerateNumber();
-        this.balance = balance;
-        this.accountType = accountType;
+        author = value;
     }
 
-    public int GetAccountNumber()
+    public void SetPrev(Song value)
     {
-        return accountNumber;
+        prev = value;
     }
 
-    public decimal GetBalance()
+    public string Title()
     {
-        return balance;
+        return name + " - " + author;
     }
 
-    public AccountType GetAccountType()
+    public void Print()
     {
-        return accountType;
+        Console.WriteLine("Песня: " + Title());
+        if (prev != null)
+        {
+            Console.WriteLine("  Предыдущая: " + prev.Title());
+        }
+        else
+        {
+            Console.WriteLine("  Предыдущей песни нет");
+        }
     }
 
-    public bool Deposit(decimal amount)
+    public override bool Equals(object d)
     {
-        if (amount <= 0)
+        Song other = d as Song;
+        if (other == null)
         {
             return false;
         }
-        balance += amount;
-        transactions.Enqueue(new BankTransaction(amount));
-        return true;
+        return name == other.name && author == other.author;
     }
 
-    public bool Withdraw(decimal amount)
+    public override int GetHashCode()
     {
-        if (amount <= 0 || amount > balance)
-        {
-            return false;
-        }
-        balance -= amount;
-        transactions.Enqueue(new BankTransaction(-amount));
-        return true;
+        return (name + author).GetHashCode();
     }
-
-    public bool Transfer(BankAccount source, decimal amount)
-    {
-        if (source == null)
-        {
-            return false;
-        }
-
-        if (source == this)
-        {
-            return false;
-        }
-
-        if (!source.Withdraw(amount))
-        {
-            return false;
-        }
-
-        Deposit(amount);
-        return true;
-    }
-    public void PrintTransactions()
-    {
-        Console.WriteLine($"История операций счета {accountNumber}:");
-
-        if (transactions.Count == 0)
-        {
-            Console.WriteLine("  операций нет");
-            return;
-        }
-
-        foreach (object item in transactions)
-        {
-            BankTransaction t = (BankTransaction)item;
-            Console.WriteLine($"  {t.Date:dd.MM.yyyy HH:mm:ss}   {t.Amount:+0.00;-0.00}");
-        }
-    }
-
-    public void Dispose()
-    {
-        if (disposed)
-        {
-            return;
-        }
-
-        string fileName = $"transactions_{accountNumber}.txt";
-
-        using (StreamWriter writer = new StreamWriter(fileName))
-        {
-            foreach (object item in transactions)
-            {
-                BankTransaction t = (BankTransaction)item;
-                writer.WriteLine($"{t.Date:dd.MM.yyyy HH:mm:ss};{t.Amount:+0.00;-0.00}");
-            }
-        }
-
-        Console.WriteLine($"Проводки счета {accountNumber} записаны в файл: {Path.GetFullPath(fileName)}");
-
-        disposed = true;
-        GC.SuppressFinalize(this);
-    }
-}
-
-struct Money
-{
-    public decimal Amount;
 }
 
 class Program
@@ -173,20 +79,15 @@ class Program
     {
         Console.OutputEncoding = System.Text.Encoding.UTF8;
 
-        using (BankAccount acc1 = new BankAccount(1000m, AccountType.Current))
-        using (BankAccount acc2 = new BankAccount(500m, AccountType.Savings))
-        {
-            acc1.Deposit(200m);
-            acc1.Withdraw(150m);
-            acc1.Withdraw(5000m);
-            acc2.Transfer(acc1, 300m);
+        Song mySong = new Song();
+        mySong.SetName("Группа крови");
+        mySong.SetAuthor("Кино");
 
-            acc1.PrintTransactions();
-            Console.WriteLine();
-            acc2.PrintTransactions();
-            Console.WriteLine();
-        }
+        Song s2 = new Song("Звезда по имени Солнце", "Кино");
+        Song s3 = new Song("Знаешь ли ты", "Ария", s2);
 
-        Console.WriteLine("Блок using закончился, Dispose вызван автоматически.");
+        mySong.Print();
+        s2.Print();
+        s3.Print();
     }
 }
